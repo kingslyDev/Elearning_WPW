@@ -1,8 +1,8 @@
 <?php
-$servername = "localhost"; 
-$username = "root"; 
+$servername = "urServerNameDB"; 
+$username = "urUsernameDB"; 
 $password = ""; 
-$dbname = "elearningpens"; 
+$dbname = "urnameDB"; 
 
 
 $conn = new mysqli($servername, $username, $password, $dbname);

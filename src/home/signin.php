@@ -1,16 +1,7 @@
 <?php
 session_start();
 
-if(isset($_SESSION['UserID'])) {
-  if($_SESSION['Role'] ==  "Dosen"){
-    header("Location: ../dosen/manage.php");
-    exit();
-  }
-  else{
-    header("Location: ../murid/kelas.php");
-  }
-}
-
+include '../../auth/aturanlogin.php';
 include '../../database/config.php';
 
 $error = '';

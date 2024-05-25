@@ -1,18 +1,15 @@
 <?php
-
 session_start();
 
-if(isset($_SESSION['UserID'])){
-    if($_SESSION['Role'] == "Dosen"){
-        header("Location: manage.php");
-        exit();
-    }
-    else{
-        header("Location: ../murid/kelas.php");
-        exit();
-    }
-}
+include '../../auth/aksesdosen.php';
+require_once '../../database/config.php';
 
+
+$sql = "SELECT * FROM Kelas WHERE DosenID = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION['UserID']);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 
@@ -108,7 +105,7 @@ if(isset($_SESSION['UserID'])){
                         </a>
                     </li>
                     <li>
-                        <a href="signin.html" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="../../auth/logout.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
                                 <img src="../../assets/img/icons/security-safe.svg" alt="icon">
                             </div>
@@ -164,38 +161,39 @@ if(isset($_SESSION['UserID'])){
                         <p class="font-extrabold text-[30px] leading-[45px]">Atur Kelas</p>
                         <p class="text-[#7F8190]">Berikan Kelas Terbaik untuk Mahasiswamu!</p>
                     </div>
-                    <a href="new-course.html" class="h-[52px] p-[14px_20px] bg-[#6436F1] rounded-full font-bold text-white transition-all duration-300 hover:shadow-[0_4px_15px_0_#6436F14D]">Add New Course</a>
+                    <a href="addclass.php" class="h-[52px] p-[14px_20px] bg-[#6436F1] rounded-full font-bold text-white transition-all duration-300 hover:shadow-[0_4px_15px_0_#6436F14D]">Tambah Kelas Baru</a>
                 </div>
             </div>
             <div class="course-list-container flex flex-col px-5 mt-[30px] gap-[30px]">
                 <div class="course-list-header flex flex-nowrap justify-between pb-4 pr-10 border-b border-[#EEEEEE]">
                     <div class="flex shrink-0 w-[300px]">
-                        <p class="text-[#7F8190]">Course</p>
+                        <p class="text-[#7F8190]">Kelas</p>
                     </div>
                     <div class="flex justify-center shrink-0 w-[150px]">
-                        <p class="text-[#7F8190]">Date Created</p>
+                        <p class="text-[#7F8190]">Dibuat Pada</p>
                     </div>
                     <div class="flex justify-center shrink-0 w-[170px]">
-                        <p class="text-[#7F8190]">Category</p>
+                        <p class="text-[#7F8190]">Kategori</p>
                     </div>
                     <div class="flex justify-center shrink-0 w-[120px]">
-                        <p class="text-[#7F8190]">Action</p>
+                        <p class="text-[#7F8190]">Atur Kelas</p>
                     </div>
                 </div>
+                <?php while($row = $result->fetch_assoc()): ?>
                 <div class="list-items flex flex-nowrap justify-between pr-10">
                     <div class="flex shrink-0 w-[300px]">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 flex shrink-0 overflow-hidden rounded-full">
-                                <img src="../../assets/img/thumbnail/Basic-Interview.png" class="object-cover" alt="thumbnail">
+                                <img src="../../storages/<?php echo $row['Thumbnail']; ?>" class="object-cover" alt="thumbnail">
                             </div>
                             <div class="flex flex-col gap-[2px]">
-                                <p class="font-bold text-lg">Interview</p>
-                                <p class="text-[#7F8190]">Beginners</p>
+                                <p class="font-bold text-lg"><?php echo htmlspecialchars($row['NamaKelas'])?></p>
+                                <p class="text-[#7F8190]"><?php echo htmlspecialchars($row['Deskripsi'])?></p>
                             </div>
                         </div>
                     </div>
                     <div class="flex shrink-0 w-[150px] items-center justify-center">
-                        <p class="font-semibold">22 August 2024</p>
+                        <p class="font-semibold"><?php echo date('d F Y', strtotime($row['created_at']))?></p>
                     </div>
                     <div class="flex shrink-0 w-[170px] items-center justify-center">
                         <p class="p-[8px_16px] rounded-full bg-[#FFF2E6] font-bold text-sm text-[#F6770B]">Product Design</p>
@@ -207,27 +205,26 @@ if(isset($_SESSION['UserID'])){
                                     menu
                                     <img src="../../assets/img/icons/arrow-down.svg" alt="icon">
                                 </button>
-                                <a href="#" class="flex items-center justify-between font-bold text-sm w-full">
+                                <a href="inclass.php" class="flex items-center justify-between font-bold text-sm w-full">
                                     Manage
                                 </a>
-                                <a href="course-students.html" class="flex items-center justify-between font-bold text-sm w-full">
+                                <a href="addstudent.php" class="flex items-center justify-between font-bold text-sm w-full">
                                     Students
                                 </a>
-                                <a href="course-details.html" class="flex items-center justify-between font-bold text-sm w-full">
+                                <a href="editclass.php" class="flex items-center justify-between font-bold text-sm w-full">
                                     Edit Course
                                 </a>
-                                <a href="#" class="flex items-center justify-between font-bold text-sm w-full text-[#FD445E]">
+                                <a href="deleteclass.php" class="flex items-center justify-between font-bold text-sm w-full text-[#FD445E]">
                                     Delete
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                
             </div>
             <div id="pagiantion" class="flex gap-4 items-center mt-[37px] px-5">
             </div>
+            <?php endwhile; ?>
         </div>
     </section>
 
@@ -256,3 +253,9 @@ if(isset($_SESSION['UserID'])){
     </script>
 </body>
 </html>
+
+
+<?php
+$stmt->close();
+$conn->close();
+?>

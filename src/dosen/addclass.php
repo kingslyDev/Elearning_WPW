@@ -1,3 +1,70 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['UserID'])) {
+    header("Location: signin.php");
+    exit();
+}
+
+if ($_SESSION['Role'] !== 'Dosen') {
+    echo "Maaf, Anda tidak memiliki izin untuk mengakses halaman ini. 403";
+    exit();
+}
+
+require_once '../../database/config.php'; 
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $nama_kelas = $_POST['nama_kelas'];
+    $kategori = $_POST['kategori'];
+    $dosen_id = $_SESSION['UserID'];
+
+    $target_dir = 'C:/xampp/htdocs/elearning/storages/cover/';
+    $target_file = $target_dir . basename($_FILES["thumbnail"]["name"]);
+    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+    $uploadStatus = 1;
+
+    $check = getimagesize($_FILES["thumbnail"]["tmp_name"]);
+    if ($check === false) {
+        echo "File is not an image.";
+        $uploadStatus = 0;
+    }
+
+    if ($_FILES["thumbnail"]["size"] > 500000) {
+        echo "File Terlalu Besar";
+        $uploadStatus = 0;
+    }
+
+    if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif" ) {
+        echo "Hanya Menerima FILE JPG,PNG,JPEG";
+        $uploadStatus = 0;
+    }
+
+    if ($uploadStatus == 0) {
+        echo "Sorry, your file was not uploaded.";
+    } else {
+        if (move_uploaded_file($_FILES["thumbnail"]["tmp_name"], $target_file)) {
+            echo "The file " . basename($_FILES["thumbnail"]["name"]) . " has been uploaded.";
+            $thumbnailPath = 'cover/' . basename($_FILES["thumbnail"]["name"]);
+
+            $sql = "INSERT INTO Kelas (NamaKelas, Deskripsi, Thumbnail, Kategori, DosenID) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssssi", $nama_kelas, $deskripsi, $thumbnailPath, $kategori, $dosen_id);
+
+            if ($stmt->execute()) {
+                header("Location: manage.php");
+            } else {
+                echo "Error: " . $sql . "<br>" . $conn->error;
+            }
+        } else {
+            echo "Sorry, there was an error uploading your file.";
+        }
+    }
+    $stmt->close();
+    $conn->close();
+}
+?>
+
+
 <!doctype html>
 <html>
 <head>
@@ -153,145 +220,52 @@
                 <h1 class="font-extrabold text-[30px] leading-[45px]">New Course</h1>
                 <p class="text-[#7F8190]">Provide high quality for best students</p>
             </div>
-            <form class="flex flex-col gap-[30px] w-[500px] mx-[70px] mt-10">
-                <div class="flex gap-5 items-center">
-                    <input type="file" name="icon" id="icon" class="peer hidden" onchange="previewFile()" data-empty="true" required>
-                    <div class="relative w-[100px] h-[100px] rounded-full overflow-hidden peer-data-[empty=true]:border-[3px] peer-data-[empty=true]:border-dashed peer-data-[empty=true]:border-[#EEEEEE]">
-                        <div class="relative file-preview z-10 w-full h-full hidden">
-                            <img src="" class="thumbnail-icon w-full h-full object-cover" alt="thumbnail">
-                        </div>
-                        <span class="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 text-center font-semibold text-sm text-[#7F8190]">Icon <br>Course</span>
-                    </div>
-                    <button type="button" class="flex shrink-0 p-[8px_20px] h-fit items-center rounded-full bg-[#0A090B] font-semibold text-white" onclick="document.getElementById('icon').click()">
-                        Add Icon
-                    </button>
+            <form class="flex flex-col gap-[30px] w-[500px] mx-[70px] mt-10" method="POST" enctype="multipart/form-data">
+        <div class="flex gap-5 items-center">
+            <input type="file" name="thumbnail" id="thumbnail" class="peer hidden" onchange="previewFile()" required>
+            <div class="relative w-[100px] h-[100px] rounded-full overflow-hidden peer-data-[empty=true]:border-[3px] peer-data-[empty=true]:border-dashed peer-data-[empty=true]:border-[#EEEEEE]">
+                <div class="relative file-preview z-10 w-full h-full hidden">
+                    <img src="" class="thumbnail-icon w-full h-full object-cover" alt="thumbnail">
                 </div>
-                <div class="flex flex-col gap-[10px]">
-                    <p class="font-semibold">Course Name</p>
-                    <div class="flex items-center w-[500px] h-[52px] p-[14px_16px] rounded-full border border-[#EEEEEE] transition-all duration-300 focus-within:border-2 focus-within:border-[#0A090B]">
-                        <div class="mr-[14px] w-6 h-6 flex items-center justify-center overflow-hidden">
-                            <img src="../../assets/img//icons/note-favorite-outline.svg" class="w-full h-full object-contain" alt="icon">
-                        </div>
-                        <input type="text" class="font-semibold placeholder:text-[#7F8190] placeholder:font-normal w-full outline-none" placeholder="Write your better course name" name="name" required>
-                    </div>
-                </div>
-                <div class="group/category flex flex-col gap-[10px]">
-                    <p class="font-semibold">Category</p>
-                    <div class="peer flex items-center p-[12px_16px] rounded-full border border-[#EEEEEE] transition-all duration-300 focus-within:border-2 focus-within:border-[#0A090B]">
-                        <div class="mr-[10px] w-6 h-6 flex items-center justify-center overflow-hidden">
-                            <img src="../../assets/img//icons/bill.svg" class="w-full h-full object-contain" alt="icon">
-                        </div>
-                        <select id="category" class="pl-1 font-semibold focus:outline-none w-full text-[#0A090B] invalid:text-[#7F8190] invalid:font-normal appearance-none bg-[url('../../assets/img//icons/arrow-down.svg')] bg-no-repeat bg-right" name="category" required>
-                            <option value="" disabled selected hidden>Choose one of category</option>
-                            <option value="a" class="font-semibold">Digital Marketing</option>
-                            <option value="b" class="font-semibold">Web Development</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex flex-col gap-[10px]">
-                    <p class="font-semibold">Course Type</p>
-                    <div class="flex gap-5 items-center">
-                        <a href="#" class="group relative flex flex-col w-full items-center gap-5 p-[30px_16px] border border-[#EEEEEE] rounded-[30px] transition-all duration-300 aria-checked:border-2 aria-checked:border-[#0A090B]" data-group="course-type" aria-checked="false" onclick="handleActiveAnchor(this)">
-                            <div class="w-[70px] h-[70px] flex shrink-0 overflow-hidden">
-                                <img src="../../assets/img//icons/onboarding.svg" class="w-full h-full" alt="icon">
-                            </div>
-                            <span class="text-center mx-auto font-semibold">Onboarding</span>
-                            <div class="absolute transform -translate-x-1/2 -translate-y-1/2 top-[24px] right-0 hidden transition-all duration-300 group-aria-checked:block">
-                                <img src="../../assets/img//icons/tick-circle.svg" alt="icon">
-                            </div>
-                        </a>
-                        <a href="#" class="group relative flex flex-col w-full items-center gap-5 p-[30px_16px] border border-[#EEEEEE] rounded-[30px] transition-all duration-300 aria-checked:border-2 aria-checked:border-[#0A090B]" data-group="course-type" aria-checked="false" onclick="handleActiveAnchor(this)">
-                            <div class="w-[70px] h-[70px] flex shrink-0 overflow-hidden">
-                                <img src="../../assets/img//icons/module.svg" class="w-full h-full" alt="icon">
-                            </div>
-                            <span class="text-center mx-auto font-semibold">CBT Module</span>
-                            <div class="absolute transform -translate-x-1/2 -translate-y-1/2 top-[24px] right-0 hidden transition-all duration-300 group-aria-checked:block">
-                                <img src="../../assets/img//icons/tick-circle.svg" alt="icon">
-                            </div>
-                        </a>
-                        <a href="#" class="group relative flex flex-col w-full items-center gap-5 p-[30px_16px] border border-[#EEEEEE] rounded-[30px] transition-all duration-300 aria-checked:border-2 aria-checked:border-[#0A090B]" data-group="course-type" aria-checked="false" onclick="handleActiveAnchor(this)">
-                            <div class="w-[70px] h-[70px] flex shrink-0 overflow-hidden">
-                                <img src="../../assets/img//icons/job.svg" class="w-full h-full" alt="icon">
-                            </div>
-                            <span class="text-center mx-auto font-semibold">Job-Ready</span>
-                            <div class="absolute transform -translate-x-1/2 -translate-y-1/2 top-[24px] right-0 hidden transition-all duration-300 group-aria-checked:block">
-                                <img src="../../assets/img//icons/tick-circle.svg" alt="icon">
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                <div class="flex flex-col gap-[10px]">
-                    <p class="font-semibold">Publish Date</p>
-                    <div class="flex gap-[10px] items-center">
-                        <a href="#" class="group relative flex w-full items-center gap-[14px] p-[14px_16px] border border-[#EEEEEE] rounded-full transition-all duration-300 aria-checked:border-2 aria-checked:border-[#0A090B]" data-group="publish-date" aria-checked="false" onclick="handleActiveAnchor(this)">
-                            <div class="w-[24px] h-[24px] flex shrink-0 overflow-hidden">
-                                <img src="../../assets/img//icons/clock.svg" class="w-full h-full" alt="icon">
-                            </div>
-                            <span class="font-semibold">Active Now</span>
-                            <div class="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 right-0 hidden transition-all duration-300 group-aria-checked:block">
-                                <img src="../../assets/img//icons/tick-circle.svg" alt="icon">
-                            </div>
-                        </a>
-                        <a href="#" class="group relative flex w-full items-center gap-[14px] p-[14px_16px] border border-[#EEEEEE] rounded-full transition-all duration-300 aria-checked:border-2 aria-checked:border-[#0A090B] disabled:border-[#EEEEEE]" data-group="publish-date" aria-checked="false" onclick="event.preventDefault()" disabled>
-                            <div class="w-[24px] h-[24px] flex shrink-0 overflow-hidden">
-                                <img src="../../assets/img//icons/calendar-add-disabled.svg" class="w-full h-full" alt="icon">
-                            </div>
-                            <span class="font-semibold text-[#EEEEEE]">Schedule for Later</span>
-                            <div class="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 right-0 hidden transition-all duration-300 group-aria-checked:block">
-                                <img src="../../assets/img//icons/tick-circle.svg" alt="icon">
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                <div class="group/access flex flex-col gap-[10px]">
-                    <p class="font-semibold">Access Type</p>
-                    <div class="peer flex items-center p-[12px_16px] rounded-full border border-[#EEEEEE] transition-all duration-300 focus-within:border-2 focus-within:border-[#0A090B]">
-                        <div class="mr-[10px] w-6 h-6 flex items-center justify-center overflow-hidden">
-                            <img src="../../assets/img//icons/security-user.svg" class="w-full h-full object-contain" alt="icon">
-                        </div>
-                        <select id="access" class="pl-1 font-semibold focus:outline-none w-full text-[#0A090B] invalid:text-[#7F8190] invalid:font-normal appearance-none bg-[url('../../assets/img//icons/arrow-down.svg')] bg-no-repeat bg-right" name="access" required>
-                            <option value="" disabled selected hidden>Choose the access type</option>
-                            <option value="a" class="font-semibold">Digital Marketing</option>
-                            <option value="b" class="font-semibold">Web Development</option>
-                        </select>
-                    </div>
-                </div>
-                <label class="font-semibold flex items-center gap-[10px]"
-                    ><input
-                    type="radio"
-                    name="tnc"
-                    class="w-[24px] h-[24px] appearance-none checked:border-[3px] checked:border-solid checked:border-white rounded-full checked:bg-[#2B82FE] ring ring-[#EEEEEE]"
-                    checked/>
-                    I have read terms and conditions
-                </label>
-                <div class="flex items-center gap-5">
-                    <a href="" class="w-full h-[52px] p-[14px_20px] bg-[#0A090B] rounded-full font-semibold text-white transition-all duration-300 text-center">Add to Draft</a>
-                    <a href="index.html" class="w-full h-[52px] p-[14px_20px] bg-[#6436F1] rounded-full font-bold text-white transition-all duration-300 hover:shadow-[0_4px_15px_0_#6436F14D] text-center">Save Course</a>
-                </div>
-            </form>
+                <span class="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 text-center font-semibold text-sm text-[#7F8190]">Thumbnail<br>Course</span>
+            </div>
+            <button type="button" class="flex shrink-0 p-[8px_20px] h-fit items-center rounded-full bg-[#0A090B] font-semibold text-white" onclick="document.getElementById('thumbnail').click()">
+                Add Thumbnail
+            </button>
         </div>
-    </section>
+        <div class="flex flex-col gap-[10px]">
+            <label for="nama_kelas" class="font-semibold">Nama Kelas</label>
+            <input type="text" id="nama_kelas" class="font-semibold placeholder:text-[#7F8190] placeholder:font-normal w-[500px] h-[52px] p-[14px_16px] rounded-full border border-[#EEEEEE] transition-all duration-300 focus-within:border-2 focus-within:border-[#0A090B]" placeholder="Tulis nama kelas" name="nama_kelas" required>
+        </div>
+        <div class="flex flex-col gap-[10px]">
+            <label for="nama_kelas" class="font-semibold">Dosen</label>
+            <input type="text" id="deksripsi" class="font-semibold placeholder:text-[#7F8190] placeholder:font-normal w-[500px] h-[52px] p-[14px_16px] rounded-full border border-[#EEEEEE] transition-all duration-300 focus-within:border-2 focus-within:border-[#0A090B]" placeholder="Tulis nama dosen pengajar" name="deksripsi" required>
+        </div>
+        <div class="group/category flex flex-col gap-[10px]">
+            <label for="kategori" class="font-semibold">Kategori</label>
+            <select id="kategori" class="pl-1 font-semibold focus:outline-none w-full text-[#0A090B] invalid:text-[#7F8190] invalid:font-normal appearance-none bg-[url('../../assets/img//icons/arrow-down.svg')] bg-no-repeat bg-right" name="kategori" required>
+                <option value="" disabled selected hidden>Pilih Kategori</option>
+                <option value="teori" class="font-semibold">Teori</option>
+                <option value="praktek" class="font-semibold">Praktek</option>
+            </select>
+        </div>
+        <button type="submit" class="w-full h-[52px] p-[14px_20px] bg-[#6436F1] rounded-full font-bold text-white transition-all duration-300 hover:shadow-[0_4px_15px_0_#6436F14D] text-center">Save Course</button>
+    </form>
 
     <script>
         function previewFile() {
-            var preview = document.querySelector('.file-preview');
-            var fileInput = document.querySelector('input[type=file]');
+            const preview = document.querySelector('.thumbnail-icon');
+            const file = document.querySelector('input[type=file]').files[0];
+            const reader = new FileReader();
 
-            if (fileInput.files.length > 0) {
-                var reader = new FileReader();
-                var file = fileInput.files[0]; // Get the first file from the input
+            reader.addEventListener("load", function () {
+                // convert image file to base64 string
+                preview.src = reader.result;
+                document.querySelector('.file-preview').classList.remove('hidden');
+            }, false);
 
-                reader.onloadend = function () {
-                    var img = preview.querySelector('.thumbnail-icon'); // Get the thumbnail image element
-                    img.src = reader.result; // Update src attribute with the uploaded file
-                    preview.classList.remove('hidden'); // Remove the 'hidden' class to display the preview
-                }
-
+            if (file) {
                 reader.readAsDataURL(file);
-                fileInput.setAttribute('data-empty', 'false');
-            } else {
-                preview.classList.add('hidden'); // Hide preview if no file selected
-                fileInput.setAttribute('data-empty', 'true');
             }
         }
     </script>

@@ -1,15 +1,17 @@
 <?php
 session_start();
 
+
 include '../../auth/aksesdosen.php';
 require_once '../../database/config.php';
-
+include '../../auth/who.php';
 
 $sql = "SELECT * FROM Kelas WHERE DosenID = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $_SESSION['UserID']);
 $stmt->execute();
 $result = $stmt->get_result();
+
 ?>
 
 
@@ -147,7 +149,7 @@ $result = $stmt->get_result();
                     <div class="flex gap-3 items-center">
                         <div class="flex flex-col text-right">
                             <p class="text-sm text-[#7F8190]">Howdy</p>
-                            <p class="font-semibold">Fany Alqo</p>
+                            <p class="font-semibold"><?php echo $nama_user; ?></p>
                         </div>
                         <div class="w-[46px] h-[46px]">
                             <img src="../../assets/img/photos/default-photo.svg" alt="photo">
@@ -196,30 +198,21 @@ $result = $stmt->get_result();
                         <p class="font-semibold"><?php echo date('d F Y', strtotime($row['created_at']))?></p>
                     </div>
                     <div class="flex shrink-0 w-[170px] items-center justify-center">
-                        <p class="p-[8px_16px] rounded-full bg-[#FFF2E6] font-bold text-sm text-[#F6770B]">Product Design</p>
+                        <p class="p-[8px_16px] rounded-full bg-[#FFF2E6] font-bold text-sm text-[#F6770B]"><?php echo htmlspecialchars($row['Kategori'])?></p>
                     </div>
                     <div class="flex shrink-0 w-[120px] items-center">
                         <div class="relative h-[41px]">
-                            <div class="menu-dropdown w-[120px] max-h-[41px] overflow-hidden absolute top-0 p-[10px_16px] bg-white flex flex-col gap-3 border border-[#EEEEEE] transition-all duration-300 hover:shadow-[0_10px_16px_0_#0A090B0D] rounded-[18px]">
-                                <button onclick="toggleMaxHeight(this)" class="flex items-center justify-between font-bold text-sm w-full">
-                                    menu
-                                    <img src="../../assets/img/icons/arrow-down.svg" alt="icon">
-                                </button>
-                                <a href="inclass.php" class="flex items-center justify-between font-bold text-sm w-full">
-                                    Manage
-                                </a>
-                                <a href="addstudent.php" class="flex items-center justify-between font-bold text-sm w-full">
-                                    Students
-                                </a>
-                                <a href="editclass.php" class="flex items-center justify-between font-bold text-sm w-full">
-                                    Edit Course
-                                </a>
-                                <a href="deleteclass.php" class="flex items-center justify-between font-bold text-sm w-full text-[#FD445E]">
-                                    Delete
-                                </a>
-                            </div>
-                        </div>
+                        <div class="menu-dropdown w-[120px] max-h-[41px] overflow-hidden absolute top-0 p-[10px_16px] bg-white flex flex-col gap-3 border border-[#EEEEEE] transition-all duration-300 hover:shadow-[0_10px_16px_0_#0A090B0D] rounded-[18px]">
+                    <button onclick="toggleMaxHeight(this)" class="flex items-center justify-between font-bold text-sm w-full">
+                    <img src="../../assets/img/icons/arrow-down.svg" alt="icon">
+                    </button>
+                    <a href="inclass.php?kelas_id=<?php echo $row['KelasID']; ?>" class="flex items-center justify-between font-bold text-sm w-full">Tugas</a>
+                    <a href="addstudent.php?kelas_id=<?php echo $row['KelasID']; ?>" class="flex items-center justify-between font-bold text-sm w-full">Mahasiswa</a>
+                    <a href="editclass.php?kelas_id=<?php echo $row['KelasID']; ?>" class="flex items-center justify-between font-bold text-sm w-full">Edit</a>
+                    <a href="deleteclass.php?kelas_id=<?php echo $row['KelasID']; ?>" class="flex items-center justify-between font-bold text-sm w-full text-[#FD445E]">Hapus</a>
                     </div>
+                </div>
+                </div>
                 </div>
             </div>
             <div id="pagiantion" class="flex gap-4 items-center mt-[37px] px-5">

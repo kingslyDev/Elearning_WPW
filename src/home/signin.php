@@ -1,8 +1,9 @@
 <?php
 session_start();
 
-include '../../auth/aturanlogin.php';
 include '../../database/config.php';
+include '../../auth/aturanlogin.php';
+
 
 $error = '';
 

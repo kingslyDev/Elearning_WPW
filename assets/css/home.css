@@ -7,6 +7,85 @@
 2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)
 */
 
+.nilaicon {
+  background-color: #ffffff; /* Warna putih */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Efek bayangan */
+}
+
+.nilaicon h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.nilaicon p {
+  margin-bottom: 10px;
+}
+
+.nilaicon a {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #6436f1; /* Warna ungu */
+  color: #ffffff; /* Warna teks putih */
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.nilaicon a:hover {
+  background-color: #431f91; /* Warna ungu tua saat dihover */
+}
+
+.nilaicon a:focus {
+  outline: none;
+}
+
+.nilaicon a:active {
+  transform: translateY(1px); /* Efek ketika tombol ditekan */
+}
+
+.nilaicon a:not(:last-child) {
+  margin-right: 10px;
+}
+
+.student-btn {
+  display: inline-block;
+  margin: 5px;
+  padding: 10px 15px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  text-align: center;
+}
+.student-btn:hover {
+  background-color: #ddd;
+}
+.selected {
+  background-color: #b3d9ff;
+}
+
+.batas {
+  margin-top: 40px;
+  display: none;
+}
+
+.Porto {
+  width: 800px;
+  height: 605px;
+  border: none;
+  margin-top: 30px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  background-color: #f5f5f5;
+  margin-left: 80px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .Porto {
+    width: 100%; /* Lebar 90% dari parent container pada perangkat seluler */
+  }
+}
+
 *,
 ::before,
 ::after {

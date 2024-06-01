@@ -1,23 +1,100 @@
 <?php
 session_start();
 
-
-require_once '../../database/config.php';
-include '../../auth/who.php';
+include '../../database/config.php';
 include '../../auth/aksesmurid.php';
+include '../../auth/who.php';
+
+$message = "";
 
 
-$sql = "SELECT K.KelasID,K.NamaKelas,K.Deskripsi,K.Thumbnail,K.Kategori,K.Created_At
-        FROM MahasiswaKelas MK
-        INNER JOIN Kelas K ON MK.KelasID = K.KelasID
-        WHERE MK.MahasiswaID = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $_SESSION['UserID']);
-$stmt->execute();
-$result = $stmt->get_result();
+if (!isset($_GET['TugasID']) || empty($_GET['TugasID'])) {
+    echo "TugasID tidak ditemukan.";
+    exit();
+}
+
+if(isset(($_GET['TugasID']))){
+    $tugasID = $_GET['TugasID']; 
+    $sql = "SELECT * FROM tugas WHERE TugasID = ?";
+    $stmt = $conn->prepare($sql); 
+    $stmt->bind_param("i", $tugasID); 
+    $stmt->execute(); 
+    $result_tugas = $stmt->get_result(); }
+
+
+
+$tugasID = $_GET['TugasID'];
+
+
+
+if (!isset($_SESSION['UserID']) || empty($_SESSION['UserID'])) {
+    echo "MahasiswaID tidak ditemukan dalam sesi atau belum diatur.";
+    exit();
+}
+
+$mahasiswaID = $_SESSION['UserID'];
+
+
+
+$sql_check = "SELECT * FROM JawabanTugas WHERE TugasID = ? AND MahasiswaID = ?";
+if ($stmt_check = $conn->prepare($sql_check)) {
+    $stmt_check->bind_param("ii", $tugasID, $mahasiswaID);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+    
+    if ($result_check->num_rows > 0) {
+       
+        echo "Anda sudah mengumpulkan tugas ini.";
+        exit();
+    }
+    $stmt_check->close();
+}
+
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!empty($_FILES['FilePath']['tmp_name']) && is_uploaded_file($_FILES['FilePath']['tmp_name'])) {
+        $target_dir = 'C:/xampp/htdocs/elearning/storages/task/jawaban/';
+        $target_file = $target_dir . basename($_FILES['FilePath']['name']);
+        $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+
+        $uploadStatus = 1;
+
+       
+        if ($fileType != 'pdf') { 
+            $message = "Hanya file PDF yang diperbolehkan";
+            $uploadStatus = 0;
+        }
+
+        if ($uploadStatus == 0) {
+            $message = "File gagal diupload";
+        } else {
+           
+            if (move_uploaded_file($_FILES['FilePath']['tmp_name'], $target_file)) {
+               
+                $filePath = 'task/jawaban/' . basename($_FILES['FilePath']['name']); 
+                $sql = "INSERT INTO JawabanTugas (TugasID, MahasiswaID, FilePath, SubmissionDate) VALUES (?, ?, ?, NOW())"; 
+                if ($stmt = $conn->prepare($sql)) {
+                    $stmt->bind_param("iis", $tugasID, $mahasiswaID, $filePath);
+                    if ($stmt->execute()) {
+                        $message = "File berhasil diupload dan data berhasil disimpan";
+                    } else {
+                        $message = "Gagal menyimpan informasi file ke database";
+                    }
+                    $stmt->close();
+                } else {
+                    $message = "Gagal mempersiapkan statement SQL";
+                }
+            } else {
+                $message = "File gagal diupload";
+            }
+        }
+    } else {
+        $message = "File tidak ditemukan atau tidak dapat diakses";
+    }
+}
 
 ?>
-
 
 <!doctype html>
 <html>
@@ -127,63 +204,66 @@ $result = $stmt->get_result();
                     </div>
                 </div>
             </div>
-            <div class="flex flex-col px-5 mt-5">
-                <div class="w-full flex justify-between items-center">
-                    <div class="flex flex-col gap-1">
-                        <p class="font-extrabold text-[30px] leading-[45px]">Kelas Saya</p>
-                        <p class="text-[#7F8190]">Semangat Mengerjakan Tugas!</p>
-                    </div>
+            <div class="flex flex-col gap-10 px-5 mt-5">
+                <div class="breadcrumb flex items-center gap-[30px]">
+                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Beranda</a>
+                    <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
+                    <a href="kelas.php" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Kelas</a>
+                    <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
+                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold ">Dalam Tugas</a>
                 </div>
             </div>
-            <div class="course-list-container flex flex-col px-5 mt-[30px] gap-[30px]">
-                <div class="course-list-header flex flex-nowrap justify-between pb-4 pr-10 border-b border-[#EEEEEE]">
-                    <div class="flex shrink-0 w-[300px]">
-                        <p class="text-[#7F8190]">Kelas</p>
-                    </div>
-                    <div class="flex justify-center shrink-0 w-[150px]">
-                        <p class="text-[#7F8190]">Tanggal Dibuat</p>
-                    </div>
-                    <div class="flex justify-center shrink-0 w-[170px]">
-                        <p class="text-[#7F8190]">Kategori</p>
-                    </div>
-                    <div class="flex justify-center shrink-0 w-[120px]">
-                        <p class="text-[#7F8190]">Action</p>
-                    </div>
-                </div>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                <div class="list-items flex flex-nowrap justify-between pr-10">
-                    <div class="flex shrink-0 w-[300px]">
-                        <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 flex shrink-0 overflow-hidden rounded-full">
-                                <img src="../../storages/<?php echo $row['Thumbnail']?>" class="object-cover" alt="thumbnail">
-                            </div>
-                            <div class="flex flex-col gap-[2px]">
-                                <p class="font-bold text-lg"><?php echo htmlspecialchars($row['NamaKelas'])?> </p>
-                                <p class="text-[#7F8190]"><?php echo $row['Deskripsi']?></p>
-                            </div>
+            <div id="course-test" class="mx-[70px] w-[870px] mt-[30px]">
+            <?php while($row = $result_tugas->fetch_assoc()): ?>
+                <h1 class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Kumpulkan Sebelum : <?php echo date('d F Y', strtotime($row['DueDate']))?> </h1>
+                <div class="flex flex-col gap-[30px] mt-2">
+                    <form  method="POST" enctype="multipart/form-data" >
+                    <button type="submit" class="w-full h-[92px] flex items-center justify-center p-4 border-dashed border-2 border-[#0A090B] rounded-[20px]">
+                        <div class="flex items-center gap-5">
+                            <div>
+                            
+                            <input type="file" name="FilePath">
+                            </div>                            
+                            <p class="font-bold text-xl">Kumpulkan Tugas</p>
                         </div>
-                    </div>
-                    <div class="flex shrink-0 w-[150px] items-center justify-center">
-                        <p class="font-semibold"><?php echo date('d F Y', strtotime($row['Created_At']))?></p>
-                    </div>
-                    <div class="flex shrink-0 w-[170px] items-center justify-center">
-                        <p class="p-[8px_16px] rounded-full bg-[#FFF2E6] font-bold text-sm text-[#F6770B]"><?php echo htmlspecialchars($row['Kategori'])?></p>
-                    </div>
-                    
-                    <div class="flex shrink-0 w-[120px] items-center">
-                        <a href="tugas.php?KelasID=<?php echo $row['KelasID']?>" class="w-full h-[41px] p-[10px_20px] bg-[#0A090B] rounded-full font-bold text-sm text-white transition-all duration-300 text-center">Tugas</a>
-                    </div>
-                   
-                </div>    
-                <?php endwhile; ?>
+                    </button>
+                </div>
+            </form>
+            </div>
+            <div class="Porto">
+            <iframe
+            class="aspect-w-16 aspect-h-9 rounded-2xl border border-black"
+            src="../../storages/<?php echo $row['FilePath']?>"
+            title="Portofolio Fathur"
+            alt="Portofolio Fathur"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen=""
+            style="width: 100%; height: 600px; margin: 0 auto; display: block"
+            ></iframe>
+            </div>
+            <?php endwhile; ?>
         </div>
     </section>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuButton = document.getElementById('more-button');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+        
+            menuButton.addEventListener('click', function () {
+            dropdownMenu.classList.toggle('hidden');
+            });
+        
+            // Close the dropdown menu when clicking outside of it
+            document.addEventListener('click', function (event) {
+            const isClickInside = menuButton.contains(event.target) || dropdownMenu.contains(event.target);
+            if (!isClickInside) {
+                dropdownMenu.classList.add('hidden');
+            }
+            });
+        });
+    </script>
+    
 </body>
 </html>
-
-
-<?php
-$stmt->close();
-$conn->close();
-?>

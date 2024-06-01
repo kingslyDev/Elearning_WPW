@@ -1,0 +1,71 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #ffffff; /* Warna putih */
+  color: #000000; /* Warna teks hitam */
+  margin: 0;
+  padding: 0;
+}
+
+.nilaicon {
+  width: 80%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  color: #6436f1; /* Warna ungu */
+}
+
+p {
+  color: #000000; /* Warna teks hitam */
+}
+
+a {
+  color: #6436f1; /* Warna ungu */
+  text-decoration: none;
+}
+
+a:hover {
+  color: #431f91; /* Warna ungu tua saat dihover */
+}
+
+.nilaicon {
+  background-color: #ffffff; /* Warna putih */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Efek bayangan */
+}
+
+.nilaicon h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.nilaicon p {
+  margin-bottom: 10px;
+}
+
+.nilaicon a {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #6436f1; /* Warna ungu */
+  color: #ffffff; /* Warna teks putih */
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.nilaicon a:hover {
+  background-color: #431f91; /* Warna ungu tua saat dihover */
+}
+
+.nilaicon a:focus {
+  outline: none;
+}
+
+.nilaicon a:active {
+  transform: translateY(1px); /* Efek ketika tombol ditekan */
+}
+
+.nilaicon a:not(:last-child) {
+  margin-right: 10px;
+}

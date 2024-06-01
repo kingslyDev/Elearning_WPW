@@ -47,16 +47,16 @@ $result = $stmt->get_result();
                         </a>
                     </li>
                     <li>
-                        <a href="kelas.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 bg-[#2B82FE] transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="kelas.php" href="home.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
                                 <img src="../../assets/img/icons/profile-2user.svg" alt="icon">
                             </div>
-                            <p class="font-semibold text-white transition-all duration-300 hover:text-white">Kelas</p>
+                            <p class="font-semibold transition-all duration-300 hover:text-white">Kelas</p>
                         </a>
                     </li>
                     <li>
                         <a href="nilai.php"
-                            class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 bg-[#2B82FE] transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
                                 <img src="../../assets/img/icons/chart-2.svg" alt="icon">
                             </div>
@@ -171,11 +171,17 @@ $result = $stmt->get_result();
                     </div>
                     
                     <div class="flex shrink-0 w-[120px] items-center">
-                        <a href="tugas.php?KelasID=<?php echo $row['KelasID']?>" class="w-full h-[41px] p-[10px_20px] bg-[#0A090B] rounded-full font-bold text-sm text-white transition-all duration-300 text-center">Tugas</a>
+                        <a href="nilaitugas.php?KelasID=<?php echo $row['KelasID']?>" class="w-full h-[41px] p-[10px_20px] bg-[#0A090B] rounded-full font-bold text-sm text-white transition-all duration-300 text-center">Lihat Nilai</a>
                     </div>
                    
                 </div>    
+                
                 <?php endwhile; ?>
+        </div>
+        <div class="flex flex-col px-5 mt-5">
+        <div class="flex shrink-0 w-[120px] items-center">
+            <a href="rekapnilai.php" class="w-full h-[41px] p-[10px_20px] bg-[#0A090B] rounded-full font-bold text-sm text-white transition-all duration-300 text-center">Rekap </a>
+        </div>
         </div>
     </section>
 

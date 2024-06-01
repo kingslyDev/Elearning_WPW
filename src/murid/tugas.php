@@ -1,23 +1,46 @@
 <?php
 session_start();
 
-
 require_once '../../database/config.php';
 include '../../auth/who.php';
 include '../../auth/aksesmurid.php';
 
+$message = "";
 
-$sql = "SELECT K.KelasID,K.NamaKelas,K.Deskripsi,K.Thumbnail,K.Kategori,K.Created_At
-        FROM MahasiswaKelas MK
-        INNER JOIN Kelas K ON MK.KelasID = K.KelasID
-        WHERE MK.MahasiswaID = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $_SESSION['UserID']);
-$stmt->execute();
-$result = $stmt->get_result();
+if (!isset($_GET['KelasID']) || empty($_GET['KelasID'])) {
+    echo "KelasID tidak ditemukan.";
+    exit();
+}
 
+$kelasID = intval($_GET['KelasID']);
+
+
+$sql_kelas = "SELECT * FROM Kelas WHERE KelasID = ?";
+$stmt_kelas = $conn->prepare($sql_kelas);
+$stmt_kelas->bind_param("i", $kelasID);
+$stmt_kelas->execute();
+$result_kelas = $stmt_kelas->get_result();
+
+if ($result_kelas->num_rows === 0) {
+    echo "Kelas tidak ditemukan.";
+    exit();
+}
+
+$kelas = $result_kelas->fetch_assoc();
+
+
+$sql_tugas = "SELECT * FROM Tugas WHERE KelasID = ?";
+$stmt_tugas = $conn->prepare($sql_tugas);
+$stmt_tugas->bind_param("i", $kelasID);
+$stmt_tugas->execute();
+$result_tugas = $stmt_tugas->get_result();
+
+
+
+$stmt_kelas->close();
+$stmt_tugas->close();
+$conn->close();
 ?>
-
 
 <!doctype html>
 <html>
@@ -127,63 +150,77 @@ $result = $stmt->get_result();
                     </div>
                 </div>
             </div>
-            <div class="flex flex-col px-5 mt-5">
-                <div class="w-full flex justify-between items-center">
-                    <div class="flex flex-col gap-1">
-                        <p class="font-extrabold text-[30px] leading-[45px]">Kelas Saya</p>
-                        <p class="text-[#7F8190]">Semangat Mengerjakan Tugas!</p>
-                    </div>
+            <div class="flex flex-col gap-10 px-5 mt-5">
+                <div class="breadcrumb flex items-center gap-[30px]">
+                    <a href="home.php" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Beranda</a>
+                    <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
+                    <a href="kelas.php" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Kelas</a>
+                    <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
+                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold ">Detail Kelas</a>
                 </div>
             </div>
-            <div class="course-list-container flex flex-col px-5 mt-[30px] gap-[30px]">
-                <div class="course-list-header flex flex-nowrap justify-between pb-4 pr-10 border-b border-[#EEEEEE]">
-                    <div class="flex shrink-0 w-[300px]">
-                        <p class="text-[#7F8190]">Kelas</p>
+            <div class="header ml-[70px] pr-[70px] w-[940px] flex items-center justify-between mt-10">
+                <div class="flex gap-6 items-center">
+                    <div class="w-[150px] h-[150px] flex shrink-0 relative overflow-hidden">
+                        <img src="../../storages/<?php echo $kelas['Thumbnail']?>" class="w-full h-full object-contain" alt="icon">
+                        <p class="p-[8px_16px] rounded-full bg-[#FFF2E6] font-bold text-sm text-[#F6770B] absolute bottom-0 transform -translate-x-1/2 left-1/2 text-nowrap">Product Design</p>
                     </div>
-                    <div class="flex justify-center shrink-0 w-[150px]">
-                        <p class="text-[#7F8190]">Tanggal Dibuat</p>
-                    </div>
-                    <div class="flex justify-center shrink-0 w-[170px]">
-                        <p class="text-[#7F8190]">Kategori</p>
-                    </div>
-                    <div class="flex justify-center shrink-0 w-[120px]">
-                        <p class="text-[#7F8190]">Action</p>
-                    </div>
-                </div>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                <div class="list-items flex flex-nowrap justify-between pr-10">
-                    <div class="flex shrink-0 w-[300px]">
-                        <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 flex shrink-0 overflow-hidden rounded-full">
-                                <img src="../../storages/<?php echo $row['Thumbnail']?>" class="object-cover" alt="thumbnail">
+                    <div class="flex flex-col gap-5">
+                        <h1 class="font-extrabold text-[30px] leading-[45px]"><?php echo htmlspecialchars($kelas['NamaKelas'])?></h1>
+                        <div class="flex items-center gap-5">
+                            <div class="flex gap-[10px] items-center">
+                                <div class="w-6 h-6 flex shrink-0">
+                                    <img src="../../assets/img/icons/calendar-add.svg" alt="icon">
+                                </div>
+                                <p class="font-semibold"><?php echo date('d F Y', strtotime($kelas['created_at']))?> </p>
                             </div>
-                            <div class="flex flex-col gap-[2px]">
-                                <p class="font-bold text-lg"><?php echo htmlspecialchars($row['NamaKelas'])?> </p>
-                                <p class="text-[#7F8190]"><?php echo $row['Deskripsi']?></p>
+                            <div class="flex gap-[10px] items-center">
+                                <div class="w-6 h-6 flex shrink-0">
+                                    <img src="../../assets/img/icons/profile-2user-outline.svg" alt="icon">
+                                </div>
+                                <php class="font-semibold"><?php echo htmlspecialchars($kelas['Deskripsi'])?></p>
                             </div>
                         </div>
                     </div>
-                    <div class="flex shrink-0 w-[150px] items-center justify-center">
-                        <p class="font-semibold"><?php echo date('d F Y', strtotime($row['Created_At']))?></p>
+                </div>
+            </div>
+            <div id="course-test" class="mx-[70px] w-[870px] mt-[30px]">
+                <h2 class="font-bold text-2xl">Soal-Soal</h2>
+                <div class="flex flex-col gap-[30px] mt-2">
+                    <?php while($row = $result_tugas->fetch_assoc()): ?>
+                    <div class="question-card w-full flex items-center justify-between p-4 border border-[#EEEEEE] rounded-[20px]">
+                        <div class="flex flex-col gap-[6px]">
+                            <p class="text-[#7F8190]"><?php echo $row['DeskripsiTugas']?></p>
+                            <p class="font-bold text-xl"><?php echo htmlspecialchars($row['NamaTugas'])?> </p>
+                        </div>
+                        <div class="flex items-center gap-[14px]">
+                            <a href="uploadtugas.php?TugasID=<?php echo $row['TugasID']?>" class="bg-[#0A090B] p-[14px_30px] rounded-full text-white font-semibold">Lihat Tugas</a>
+                        </div>
                     </div>
-                    <div class="flex shrink-0 w-[170px] items-center justify-center">
-                        <p class="p-[8px_16px] rounded-full bg-[#FFF2E6] font-bold text-sm text-[#F6770B]"><?php echo htmlspecialchars($row['Kategori'])?></p>
-                    </div>
-                    
-                    <div class="flex shrink-0 w-[120px] items-center">
-                        <a href="tugas.php?KelasID=<?php echo $row['KelasID']?>" class="w-full h-[41px] p-[10px_20px] bg-[#0A090B] rounded-full font-bold text-sm text-white transition-all duration-300 text-center">Tugas</a>
-                    </div>
-                   
-                </div>    
+                </div>
                 <?php endwhile; ?>
+            </div>
         </div>
     </section>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuButton = document.getElementById('more-button');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+        
+            menuButton.addEventListener('click', function () {
+            dropdownMenu.classList.toggle('hidden');
+            });
+        
+            // Close the dropdown menu when clicking outside of it
+            document.addEventListener('click', function (event) {
+            const isClickInside = menuButton.contains(event.target) || dropdownMenu.contains(event.target);
+            if (!isClickInside) {
+                dropdownMenu.classList.add('hidden');
+            }
+            });
+        });
+    </script>
+    
 </body>
 </html>
-
-
-<?php
-$stmt->close();
-$conn->close();
-?>

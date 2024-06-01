@@ -5,8 +5,6 @@ require_once '../../database/config.php';
 include '../../auth/aturanlogin.php';
 include '../../auth/aksesdosen.php';
 
-
-
 if (isset($_GET['KelasID'])) {
     $kelasID = intval($_GET['KelasID']);
     
@@ -26,5 +24,6 @@ if (isset($_GET['KelasID'])) {
     echo "ID Kelas tidak ditemukan.";
 }
 
+$stmt->close();
 $conn->close();
 ?>

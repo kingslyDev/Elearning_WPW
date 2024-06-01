@@ -1,64 +1,60 @@
 <?php
-
 session_start();
-include '../../auth/who.php';
-include '../../auth/aksesdosen.php';
+
 include '../../database/config.php';
+include '../../auth/aksesdosen.php';
+include '../../auth/who.php';
 
-$message = "";
+
+$dosenID = $_SESSION['UserID'];
 
 
-if (isset($_GET['KelasID']) && !empty($_GET['KelasID'])) {
-    $kelasID = intval($_GET['KelasID']);
-
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $email = $_POST['email'];
-
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $sql = "SELECT UserID FROM User WHERE Email = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-                $userID = $row['UserID'];
-
-                
-                $sql = "SELECT * FROM MahasiswaKelas WHERE KelasID = ? AND MahasiswaID = ?";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ii", $kelasID, $userID);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                if ($result->num_rows == 0) {
-                    
-                    $sql = "INSERT INTO MahasiswaKelas (KelasID, MahasiswaID) VALUES (?, ?)";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("ii", $kelasID, $userID);
-                    if ($stmt->execute()) {
-                        $message = "Siswa berhasil ditambahkan ke kelas.";
-                    } else {
-                        $message = "Terjadi kesalahan saat menambahkan siswa ke kelas.";
-                    }
-                } else {
-                    $message = "Siswa sudah terdaftar dalam kelas ini.";
-                }
-            } else {
-                $message = "Pengguna dengan email ini tidak ditemukan.";
-            }
-        } else {
-            $message = "Email tidak valid.";
-        }
-    }
-} else {
-    echo "Parameter KelasID tidak ditemukan.";
+if (!isset($_GET['TugasID']) || empty($_GET['TugasID'])) {
+    echo "TugasID tidak ditemukan.";
     exit();
 }
 
-?>
+$tugasID = $_GET['TugasID'];
+$message = "";
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['jawaban_id']) && isset($_POST['nilai'])) {
+    $jawabanID = $_POST['jawaban_id'];
+    $nilai = $_POST['nilai'];
+    $feedback = isset($_POST['feedback']) ? $_POST['feedback'] : '';
+
+    $sql_insert = "INSERT INTO Nilai (JawabanID, Nilai, Feedback) VALUES (?, ?, ?)";
+    if ($stmt_insert = $conn->prepare($sql_insert)) {
+        $stmt_insert->bind_param("iis", $jawabanID, $nilai, $feedback);
+        if ($stmt_insert->execute()) {
+            $message = "Nilai berhasil disimpan.";
+        } else {
+            $message = "Gagal menyimpan nilai.";
+        }
+        $stmt_insert->close();
+    } else {
+        $message = "Gagal mempersiapkan statement SQL.";
+    }
+}
+
+
+$sql = "SELECT jt.JawabanID, jt.MahasiswaID, jt.FilePath, u.Name
+        FROM JawabanTugas jt
+        INNER JOIN User u ON jt.MahasiswaID = u.UserID
+        LEFT JOIN Nilai n ON jt.JawabanID = n.JawabanID
+        WHERE jt.TugasID = ? AND n.JawabanID IS NULL";
+if ($stmt = $conn->prepare($sql)) {
+    $stmt->bind_param("i", $tugasID);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $jawabanTugas = $result->fetch_all(MYSQLI_ASSOC);
+} else {
+    echo "Gagal mempersiapkan statement SQL.";
+    exit();
+}
+
+$stmt->close();
+$conn->close();
+?>
 
 <!doctype html>
 <html>
@@ -73,9 +69,9 @@ if (isset($_GET['KelasID']) && !empty($_GET['KelasID'])) {
 
 <body class="font-poppins text-[#0A090B]">
     <section id="content" class="flex">
-    <div id="sidebar" class="w-[270px] flex flex-col shrink-0 min-h-screen justify-between p-[30px] border-r border-[#EEEEEE] bg-[#FBFBFB]">
+        <div id="sidebar" class="w-[270px] flex flex-col shrink-0 min-h-screen justify-between p-[30px] border-r border-[#EEEEEE] bg-[#FBFBFB]">
             <div class="w-full flex flex-col gap-[30px]">
-            <a href="manage.php" class="flex items-center justify-center">
+                <a href="manage.php" class="flex items-center justify-center">
                     <img src="../../assets/img/logo/logo.svg" alt="logo">
                 </a>
                 <ul class="flex flex-col gap-3">
@@ -83,7 +79,7 @@ if (isset($_GET['KelasID']) && !empty($_GET['KelasID'])) {
                         <h3 class="font-bold text-xs text-[#A5ABB2]">DAILY USE</h3>
                     </li>
                     <li>
-                        <a href="home.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="../dosen/home.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
                                 <img src="../../assets/img/icons/home-hashtag.svg" alt="icon">
                             </div>
@@ -91,20 +87,20 @@ if (isset($_GET['KelasID']) && !empty($_GET['KelasID'])) {
                         </a>
                     </li>
                     <li>
-                        <a href="manage.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 bg-[#2B82FE] transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="manage.php"
+                            class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img/icons/profile-2user.svg" alt="icon">
+                            <img src="../../assets/img/icons/profile-2user.svg" alt="icon">
                             </div>
-                            <p class="font-semibold text-white transition-all duration-300 hover:text-white">Kelas</p>
+                            <p class="font-semibold transition-all duration-300 hover:text-white">Kelas</p>
                         </a>
                     </li>
                     <li>
-                        <a href="grade.php"
-                            class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="#" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 bg-[#2B82FE] transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img/icons/chart-2.svg" alt="icon">
+                            <img src="../../assets/img/icons/chart-2.svg" alt="icon">
                             </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">Penilaian</p>
+                            <p class="font-semibold text-white transition-all duration-300 hover:text-white">Penilaian</p>
                         </a>
                     </li>
                     <li>
@@ -114,7 +110,7 @@ if (isset($_GET['KelasID']) && !empty($_GET['KelasID'])) {
                             </div>
                             <p class="font-semibold transition-all duration-300 hover:text-white">Rekap</p>
                             <div class="notif w-5 h-5 flex shrink-0 rounded-full items-center justify-center bg-[#F6770B]">
-                                <p class="font-bold text-[10px] leading-[15px] text-white">1</p>
+                                <p class="font-bold text-[10px] leading-[15px] text-white">12</p>
                             </div>
                         </a>
                     </li>
@@ -141,7 +137,17 @@ if (isset($_GET['KelasID']) && !empty($_GET['KelasID'])) {
                     </li>
                 </ul>
             </div>
-            
+            <a href="">
+                <div class="w-full flex gap-3 items-center p-4 rounded-[14px] bg-[#0A090B] mt-[30px]">
+                    <div>
+                        <img src="../../assets/img/icons/crown-round-bg.svg" alt="icon">
+                    </div>
+                    <div class="flex flex-col gap-[2px]">
+                        <p class="font-semibold text-white">Get Pro</p>
+                        <p class="text-sm leading-[21px] text-[#A0A0A0]">Unlock features</p>
+                    </div>
+                </div>
+            </a>
         </div>
         <div id="menu-content" class="flex flex-col w-full pb-[30px]">
             <div class="nav flex justify-between p-5 border-b border-[#EEEEEE]">
@@ -183,32 +189,44 @@ if (isset($_GET['KelasID']) && !empty($_GET['KelasID'])) {
                     <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
                     <a href="manage.php" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Atur Kelas</a>
                     <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
-                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Tambah Mahasiswa</a>
+                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Nilai Mahasiswa</a>
                 </div>
             </div>
-            <div class="header ml-[70px] pr-[70px] w-[940px] flex items-center justify-between mt-10">
+            <div>
+                <?php if (empty($jawabanTugas)): ?>
+                    <p>Tidak ada jawaban tugas yang perlu dinilai.</p>
+                <?php else: ?>
+                    <?php foreach ($jawabanTugas as $jawaban): ?>
+                        <div class="student-btn" data-jawaban-id="<?php echo $jawaban['JawabanID']; ?>" data-file-path="<?php echo $jawaban['FilePath']; ?>">
+                            <?php echo htmlspecialchars($jawaban['Name']); ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
-            <form id="MahasiswaKelas" class="mx-[70px] mt-[30px] flex flex-col gap-5" action="addstudent.php?KelasID=<?php echo $_GET['KelasID']; ?>" method="post">
-    <h2 class="font-bold text-2xl">Undang Mahasiswa</h2>
-    <div class="flex flex-col gap-[10px]">
-        <p class="font-semibold">Email Address</p>
-        <div class="flex items-center w-[500px] h-[52px] p-[14px_16px] rounded-full border border-[#EEEEEE] focus-within:border-2 focus-within:border-[#0A090B]">
-            <div class="mr-[14px] w-6 h-6 flex items-center justify-center overflow-hidden">
-                <img src="../../assets/img/icons/sms.svg" class="h-full w-full object-contain" alt="icon">
+            <div id="tugas-details" style="display:none;">
+                <p><a id="file-link" href="" target="_blank">Lihat Tugas</a></p>
+                <form method="POST" action="grading.php?TugasID=<?php echo $tugasID; ?>">
+                    <input type="hidden" name="jawaban_id" id="jawaban-id" value="">
+                    <label for="nilai">Nilai:</label>
+                    <input type="number" name="nilai" id="nilai" min="0" max="100" step="0.01" required>
+                    <label for="feedback">Feedback:</label>
+                    <textarea name="feedback" id="feedback"></textarea>
+                    <button type="submit">Simpan Nilai</button>
+                </form>
             </div>
-            <input type="text" class="font-semibold placeholder:text-[#7F8190] placeholder:font-normal w-full outline-none" placeholder="Tulis email Mahasiswa" name="email" require>
-        </div>
-    </div>
-    <button class="w-[500px] h-[52px] p-[14px_20px] bg-[#6436F1] rounded-full font-bold text-white transition-all duration-300 hover:shadow-[0_4px_15px_0_#6436F14D] text-center">Add Student</button>
-</form>
-            <?php if ($message): ?>
-            <div class="message mt-5 mx-[70px]">
-                <p><?php echo htmlspecialchars($message); ?></p>
-            </div>
-        <?php endif; ?>
         </div>
     </section>
 
+    <script>
+        document.querySelectorAll('.student-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.student-btn').forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                document.getElementById('tugas-details').style.display = 'block';
+                document.getElementById('file-link').href = '../../storages/' + button.getAttribute('data-file-path');
+                document.getElementById('jawaban-id').value = button.getAttribute('data-jawaban-id');
+            });
+        });
+    </script>
 </body>
-
 </html>

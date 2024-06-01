@@ -1,17 +1,10 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['UserID'])) {
-    header("Location: signin.php");
-    exit();
-}
-
-if ($_SESSION['Role'] !== 'Dosen') {
-    echo "Maaf, Anda tidak memiliki izin untuk mengakses halaman ini. 403";
-    exit();
-}
-
 require_once '../../database/config.php'; 
+include '../../auth/aksesdosen.php';
+include '../../auth/who.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nama_kelas = $_POST['nama_kelas'];
@@ -75,56 +68,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body class="font-poppins text-[#0A090B]">
     <section id="content" class="flex">
-        <div id="sidebar" class="w-[270px] flex flex-col shrink-0 min-h-screen justify-between p-[30px] border-r border-[#EEEEEE] bg-[#FBFBFB]">
+    <div id="sidebar" class="w-[270px] flex flex-col shrink-0 min-h-screen justify-between p-[30px] border-r border-[#EEEEEE] bg-[#FBFBFB]">
             <div class="w-full flex flex-col gap-[30px]">
-                <a href="index.html" class="flex items-center justify-center">
-                    <img src="../../assets/img//logo/logo.svg" alt="logo">
+            <a href="manage.php" class="flex items-center justify-center">
+                    <img src="../../assets/img/logo/logo.svg" alt="logo">
                 </a>
                 <ul class="flex flex-col gap-3">
                     <li>
                         <h3 class="font-bold text-xs text-[#A5ABB2]">DAILY USE</h3>
                     </li>
                     <li>
-                        <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="home.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img//icons/home-hashtag.svg" alt="icon">
+                                <img src="../../assets/img/icons/home-hashtag.svg" alt="icon">
                             </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">Overview</p>
+                            <p class="font-semibold transition-all duration-300 hover:text-white">Beranda</p>
                         </a>
                     </li>
                     <li>
-                        <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 bg-[#2B82FE] transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="kelas.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 bg-[#2B82FE] transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img//icons/note-favorite.svg" alt="icon">
+                                <img src="../../assets/img/icons/profile-2user.svg" alt="icon">
                             </div>
-                            <p class="font-semibold text-white transition-all duration-300 hover:text-white">Courses</p>
+                            <p class="font-semibold text-white transition-all duration-300 hover:text-white">Kelas</p>
                         </a>
                     </li>
                     <li>
-                        <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="grade.php"
+                            class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img//icons/profile-2user.svg" alt="icon">
+                                <img src="../../assets/img/icons/chart-2.svg" alt="icon">
                             </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">Students</p>
+                            <p class="font-semibold transition-all duration-300 hover:text-white">Penilaian</p>
                         </a>
                     </li>
                     <li>
-                        <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="rekap.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img//icons/sms-tracking.svg" alt="icon">
+                                <img src="../../assets/img/icons/sms-tracking.svg" alt="icon">
                             </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">Messages</p>
+                            <p class="font-semibold transition-all duration-300 hover:text-white">Rekap</p>
                             <div class="notif w-5 h-5 flex shrink-0 rounded-full items-center justify-center bg-[#F6770B]">
                                 <p class="font-bold text-[10px] leading-[15px] text-white">12</p>
                             </div>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
-                            <div>
-                                <img src="../../assets/img//icons/chart-2.svg" alt="icon">
-                            </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">Analytics</p>
                         </a>
                     </li>
                 </ul>
@@ -135,48 +121,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <li>
                         <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img//icons/3dcube.svg" alt="icon">
-                            </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">Rewards</p>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
-                            <div>
-                                <img src="../../assets/img//icons/code.svg" alt="icon">
-                            </div>
-                            <p class="font-semibold transition-all duration-300 hover:text-white">A.I Plugins</p>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
-                            <div>
-                                <img src="../../assets/img//icons/setting-2.svg" alt="icon">
+                                <img src="../../assets/img/icons/setting-2.svg" alt="icon">
                             </div>
                             <p class="font-semibold transition-all duration-300 hover:text-white">Settings</p>
                         </a>
                     </li>
                     <li>
-                        <a href="signin.html" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
+                        <a href="../../auth/logout.php" class="p-[10px_16px] flex items-center gap-[14px] rounded-full h-11 transition-all duration-300 hover:bg-[#2B82FE]">
                             <div>
-                                <img src="../../assets/img//icons/security-safe.svg" alt="icon">
+                                <img src="../../assets/img/icons/security-safe.svg" alt="icon">
                             </div>
                             <p class="font-semibold transition-all duration-300 hover:text-white">Logout</p>
                         </a>
                     </li>
                 </ul>
             </div>
-            <a href="">
-                <div class="w-full flex gap-3 items-center p-4 rounded-[14px] bg-[#0A090B] mt-[30px]">
-                    <div>
-                        <img src="../../assets/img//icons/crown-round-bg.svg" alt="icon">
-                    </div>
-                    <div class="flex flex-col gap-[2px]">
-                        <p class="font-semibold text-white">Get Pro</p>
-                        <p class="text-sm leading-[21px] text-[#A0A0A0]">Unlock features</p>
-                    </div>
-                </div>
-            </a>
         </div>
         <div id="menu-content" class="flex flex-col w-full pb-[30px]">
             <div class="nav flex justify-between p-5 border-b border-[#EEEEEE]">
@@ -199,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="flex gap-3 items-center">
                         <div class="flex flex-col text-right">
                             <p class="text-sm text-[#7F8190]">Howdy</p>
-                            <p class="font-semibold">Fany Alqo</p>
+                            <p class="font-semibold">Pak <?php echo $nama_user?></p>
                         </div>
                         <div class="w-[46px] h-[46px]">
                             <img src="../../assets/img//photos/default-photo.svg" alt="photo">
@@ -209,11 +168,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
             <div class="flex flex-col gap-10 px-5 mt-5">
                 <div class="breadcrumb flex items-center gap-[30px]">
-                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Home</a>
+                    <a href="home.php" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Beranda</a>
                     <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
-                    <a href="index.html" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Manage Courses</a>
+                    <a href="manage.php" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold">Atur Kelas</a>
                     <span class="text-[#7F8190] last:text-[#0A090B]">/</span>
-                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold ">New Course</a>
+                    <a href="#" class="text-[#7F8190] last:text-[#0A090B] last:font-semibold ">Kelas Baru</a>
                 </div>
             </div>
             <div class="header flex flex-col gap-1 px-5 mt-5">

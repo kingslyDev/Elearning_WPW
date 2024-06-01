@@ -4,48 +4,42 @@ session_start();
 include '../../database/config.php';
 include '../../auth/aturanlogin.php';
 
-
 $error = '';
 
-if($_SERVER["REQUEST_METHOD"]== "POST"){
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['Email'];
-    $password= $_POST['Password'];
+    $password = $_POST['Password'];
 
-
-$sql= "SELECT * FROM User Where Email =?";
-  if($stmt = $conn->prepare($sql)){
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if($result->num_rows == 1){
-      $user = $result->fetch_assoc();
-
-      if(password_verify($password, $user['Password'])){
+    $sql = "SELECT * FROM User WHERE Email = ?";
+    if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows == 1) {
+            $user = $result->fetch_assoc();
+            if (password_verify($password, $user['Password'])) {
                 $_SESSION['UserID'] = $user['UserID'];
                 $_SESSION['Role'] = $user['Role'];
                 $_SESSION['Name'] = $user['Name'];
 
-                if($user['Role'] === 'Dosen'){
-                  header("Location: ../dosen/manage.php");
-                } else{
-                  header("Location: ../murid/kelas.php");
+                if ($user['Role'] === 'Dosen') {
+                    header("Location: ../dosen/manage.php");
+                } else {
+                    header("Location: ../murid/kelas.php");
                 }
                 exit();
-      } else{
-        $error = "Passwordmu Salah!";
-      }
-         } else{
-          $error = "Emailmu Salah!";
-         }
-  }
-    else{
-      $error = "Database Error 403";
+            } else {
+                $error = "Passwordmu Salah!";
+            }
+        } else {
+            $error = "Emailmu Salah!";
+        }
+    } else {
+        $error = "Database Error 403";
     }
-      $stmt->close();
-    }
-    $conn->close();
-
-
+    $stmt->close();
+}
+$conn->close();
 ?>
 
 
@@ -60,11 +54,9 @@ $sql= "SELECT * FROM User Where Email =?";
 <body class="font-poppins text-[#0A090B]">
     <section id="signup" class="flex w-full min-h-[832px]">
         <nav class="flex items-center px-[50px] pt-[30px] w-full absolute top-0">
-            <div class="flex items-center">
-                <a href="#">
-                    ElearningWPW
-                </a>
-            </div>
+        <a href="index.html" class="flex items-center justify-center">
+                    <img src="../../assets/img/logo/logo.svg" alt="logo">
+        </a>
             <div class="flex items-center justify-end w-full">
                 <ul class="flex items-center gap-[30px]">
                     <li>
@@ -122,27 +114,27 @@ $sql= "SELECT * FROM User Where Email =?";
                     <div class="group/slider flex flex-nowrap w-max items-center">
                         <div class="logo-container animate-[slide_15s_linear_infinite] group-hover/slider:pause-animate flex gap-10 pl-10 items-center flex-nowrap">
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-51.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/logo.svg" alt="logo" />
                             </div>
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-51-1.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/pens.svg" alt="logo" />
                             </div>
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-52.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/logo.svg" alt="logo" />
                             </div>
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-52-1.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/pens.svg" alt="logo" />
                             </div>
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-51.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/logo.svg" alt="logo" />
                             </div>
                         </div>
                         <div class="logo-container animate-[slide_15s_linear_infinite] group-hover/slider:pause-animate flex gap-10 pl-10 items-center flex-nowrap">
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-51.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/logo.svg" alt="logo" />
                             </div>
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-51-1.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/pens.svg" alt="logo" />
                             </div>
                             <div class="w-fit flex shrink-0">
                                 <img src="/elearning/assets/img/logo/logo-52.svg" alt="logo" />
@@ -151,7 +143,7 @@ $sql= "SELECT * FROM User Where Email =?";
                                 <img src="/elearning/assets/img/logo/logo-52-1.svg" alt="logo" />
                             </div>
                             <div class="w-fit flex shrink-0">
-                                <img src="/elearning/assets/img/logo/logo-51.svg" alt="logo" />
+                                <img src="/elearning/assets/img/logo/logo.svg" alt="logo" />
                             </div>
                         </div>
                     </div>
